@@ -1,7 +1,11 @@
 use crate::rolling;
-use crate::xoodoo;
 use crunchy::unroll;
 use std::cmp;
+
+#[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+use crate::xoodoo_gene as xoodoo;
+#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+use crate::xoodoo_x86 as xoodoo;
 
 /// Xoodoo\[n_r\] being a 384 -bit permutation, messages are consumed in 48 -bytes chunks
 const BLOCK_SIZE: usize = 48;
