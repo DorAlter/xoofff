@@ -10,11 +10,14 @@ const RC: [u32; MAX_ROUNDS] = [
 ];
 
 use core::arch::x86_64::*;
+use core::simd::{LaneCount, Simd, SupportedLaneCount};
 
 use super::{Xoodoo, ROUND_KEYS};
 
-
-pub fn permute<const ROUNDS: usize>(st: &mut [u32]) {
+pub fn permutex<const N: usize, const ROUNDS: usize>(state: &mut [Simd<u32, N>])
+where
+    LaneCount<N>: SupportedLaneCount,
+{
     debug_assert!(
         st.len() == 12,
         "Xoodoo permutation state must have 12 lanes !"

@@ -1,20 +1,4 @@
-use crunchy::unroll;
-
-#[inline(always)]
-pub fn cyclic_shift<const T: usize, const V: u32>(plane: &[u32]) -> [u32; 4] {
-    debug_assert!(
-        plane.len() == 4,
-        "Each lane of Xoodoo permutation state must have four lanes !"
-    );
-
-    let mut shifted = [0u32; 4];
-    unroll! {
-        for i in 0..4 {
-            shifted[(T + i) & 3usize] = plane[i].rotate_left(V);
-        }
-    }
-    shifted
-}
+use super::xoodoo::cyclic_shift;
 
 /// Input mask rolling function roll_Xc, updating the Xoodoo permutation state, as
 /// described in section 3 of https://ia.cr/2018/767
