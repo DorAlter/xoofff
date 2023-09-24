@@ -189,7 +189,7 @@ where
 // }
 
 #[inline(always)]
-fn roundx<const N: usize>(state: &mut [Simd<u32, N>], round_key: usize)
+fn roundx<const N: usize>(state: &mut [Simd<u32, N>], round_key: u32)
 where
     LaneCount<N>: SupportedLaneCount, {
     
