@@ -213,7 +213,7 @@ where
 
     let mut tmp = [Simd::<u32, N>::splat(0u32); 12];;
 
-    tmp[0] = e[0] ^ state[0] ^ round_key;
+    tmp[0] = e[0] ^ state[0] ^ Simd::<usize, N>::splat(round_key);
     tmp[1] = e[1] ^ state[1];
     tmp[2] = e[2] ^ state[2];
     tmp[3] = e[3] ^ state[3];
