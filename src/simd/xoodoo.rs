@@ -170,22 +170,77 @@ where
 }
 
 /// Round function of Xoodoo permutation, as described in algorithm 1 of https://ia.cr/2018/767.
+// #[inline(always)]
+// fn roundx<const N: usize>(state: &mut [Simd<u32, N>], ridx: usize)
+// where
+//     LaneCount<N>: SupportedLaneCount,
+// {
+//     debug_assert!(
+//         state.len() == 12,
+//         "Xoodoo permutation state must have 12 lanes !"
+//     );
+//     debug_assert!(ridx < MAX_ROUNDS, "Round index must ∈ [0, MAX_ROUNDS) !");
+
+//     thetax(state);
+//     rho_westx(state);
+//     iotax(state, ridx);
+//     chix(state);
+//     rho_eastx(state);
+// }
+
 #[inline(always)]
 fn roundx<const N: usize>(state: &mut [Simd<u32, N>], ridx: usize)
 where
-    LaneCount<N>: SupportedLaneCount,
-{
-    debug_assert!(
-        state.len() == 12,
-        "Xoodoo permutation state must have 12 lanes !"
-    );
-    debug_assert!(ridx < MAX_ROUNDS, "Round index must ∈ [0, MAX_ROUNDS) !");
+    LaneCount<N>: SupportedLaneCount, {
+    
+    let p = [Simd::<u32, N>::splat(0u32); 4];
+    p = [
+        state[0] ^ state[4] ^ state[8],
+        state[1] ^ state[5] ^ state[9],
+        state[2] ^ state[6] ^ state[10],
+        state[3] ^ state[7] ^ state[11],
+    ];
+        
 
-    thetax(state);
-    rho_westx(state);
-    iotax(state, ridx);
-    chix(state);
-    rho_eastx(state);
+    let e = [Simd::<u32, N>::splat(0u32); 4];
+    e = [
+        p[3].rotate_left(5) ^ p[3].rotate_left(14),
+        p[0].rotate_left(5) ^ p[0].rotate_left(14),
+        p[1].rotate_left(5) ^ p[1].rotate_left(14),
+        p[2].rotate_left(5) ^ p[2].rotate_left(14),
+    ];
+
+    let mut tmp = [Simd::<u32, N>::splat(0u32); 12];;
+
+    tmp[0] = e[0] ^ state[0] ^ round_key;
+    tmp[1] = e[1] ^ state[1];
+    tmp[2] = e[2] ^ state[2];
+    tmp[3] = e[3] ^ state[3];
+
+    tmp[4] = e[3] ^ state[7];
+    tmp[5] = e[0] ^ state[4];
+    tmp[6] = e[1] ^ state[5];
+    tmp[7] = e[2] ^ state[6];
+
+    tmp[8] = (e[0] ^ state[8]).rotate_left(11);
+    tmp[9] = (e[1] ^ state[9]).rotate_left(11);
+    tmp[10] = (e[2] ^ state[10]).rotate_left(11);
+    tmp[11] = (e[3] ^ state[11]).rotate_left(11);
+
+    state[0] = (!tmp[4] & tmp[8]) ^ tmp[0];
+    state[1] = (!tmp[5] & tmp[9]) ^ tmp[1];
+    state[2] = (!tmp[6] & tmp[10]) ^ tmp[2];
+    state[3] = (!tmp[7] & tmp[11]) ^ tmp[3];
+
+    state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]).rotate_left(1);
+    state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]).rotate_left(1);
+    state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]).rotate_left(1);
+    state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]).rotate_left(1);
+
+    state[8] = ((!tmp[2] & tmp[6]) ^ tmp[10]).rotate_left(8);
+    state[9] = ((!tmp[3] & tmp[7]) ^ tmp[11]).rotate_left(8);
+    state[10] = ((!tmp[0] & tmp[4]) ^ tmp[8]).rotate_left(8);
+    state[11] = ((!tmp[1] & tmp[5]) ^ tmp[9]).rotate_left(8);
 }
 
 /// Xoodoo\[n_r\] permutation function s.t. n_r ( <= MAX_ROUNDS ) times round function
@@ -206,7 +261,7 @@ where
 
     let start = MAX_ROUNDS - ROUNDS;
     for ridx in start..MAX_ROUNDS {
-        roundx(state, ridx);
+        roundx(state, RC[ridx]);
     }
 }
 
