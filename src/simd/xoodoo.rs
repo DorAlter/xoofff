@@ -224,13 +224,13 @@ where
     tmp[7] = e[2] ^ state[6];
 
     tmp[8] = e[0] ^ state[8];
-    tmp[8] = cyclic_shiftx::<N, 1, 11>(&tmp[8]);
+    tmp[8] = (tmp[8] << 11) | (tmp[8] >> 21);
     tmp[9] = e[1] ^ state[9];
-    tmp[9] = cyclic_shiftx::<N, 1, 11>(&tmp[9]);
+    tmp[9] = (tmp[9] << 11) | (tmp[9] >> 21);
     tmp[10] = e[2] ^ state[10];
-    tmp[10] = cyclic_shiftx::<N, 1, 11>(&tmp[10]);
+    tmp[10] = (tmp[10] << 11) | (tmp[10] >> 21);
     tmp[11] = e[3] ^ state[11];
-    tmp[11] = cyclic_shiftx::<N, 1, 11>(&tmp[11]);
+    tmp[11] = (tmp[11] << 11) | (tmp[11] >> 21);
 
     state[0] = (!tmp[4] & tmp[8]) ^ tmp[0];
     state[1] = (!tmp[5] & tmp[9]) ^ tmp[1];
@@ -238,22 +238,22 @@ where
     state[3] = (!tmp[7] & tmp[11]) ^ tmp[3];
 
     state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]);
-    state[4] = cyclic_shiftx::<N, 1, 1>(&state[4]);
+    state[4] = (state[4] << 1) | (state[4] >> 31);
     state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]);
-    state[5] = cyclic_shiftx::<N, 1, 1>(&state[5]);
+    state[5] = (state[5] << 1) | (state[5] >> 31);
     state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]);
-    state[6] = cyclic_shiftx::<N, 1, 1>(&state[6]);
+    state[6] = (state[6] << 1) | (state[6] >> 31);
     state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]);
-    state[7] = cyclic_shiftx::<N, 1, 1>(&state[7]);
+    state[7] = (state[7] << 1) | (state[7] >> 31);
 
     state[8] = ((!tmp[2] & tmp[6]) ^ tmp[10]);
-    state[8] = cyclic_shiftx::<N, 1, 8>(&state[8]);
+    state[8] = (state[8] << 8) | (state[8] >> 24);
     state[9] = ((!tmp[3] & tmp[7]) ^ tmp[11]);
-    state[9] = cyclic_shiftx::<N, 1, 8>(&state[9]);
+    state[9] = (state[9] << 8) | (state[9] >> 24);
     state[10] = ((!tmp[0] & tmp[4]) ^ tmp[8]);
-    state[10] = cyclic_shiftx::<N, 1, 8>(&state[10]);
+    state[10] = (state[10] << 8) | (state[10] >> 24);
     state[11] = ((!tmp[1] & tmp[5]) ^ tmp[9]);
-    state[11] = cyclic_shiftx::<N, 1, 8>(&state[11]);
+    state[11] = (state[11] << 8) | (state[11] >> 24);
 }
 
 /// Xoodoo\[n_r\] permutation function s.t. n_r ( <= MAX_ROUNDS ) times round function
