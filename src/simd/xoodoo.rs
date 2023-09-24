@@ -193,7 +193,7 @@ fn roundx<const N: usize>(state: &mut [Simd<u32, N>], round_key: u32)
 where
     LaneCount<N>: SupportedLaneCount, {
     
-    let p = [Simd::<u32, N>::splat(0u32); 4];
+    let mut p = [Simd::<u32, N>::splat(0u32); 4];
     p = [
         state[0] ^ state[4] ^ state[8],
         state[1] ^ state[5] ^ state[9],
