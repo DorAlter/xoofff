@@ -7,7 +7,7 @@ use crunchy::unroll;
 const MAX_ROUNDS: usize = 12;
 
 /// Xoodoo\[n_r\] round constants, taken from table 2 of https://ia.cr/2018/767
-const RC: [u32; MAX_ROUNDS] = [
+const RC: [usize; MAX_ROUNDS] = [
     0x00000058, 0x00000038, 0x000003c0, 0x000000d0, 0x00000120, 0x00000014, 0x00000060, 0x0000002c,
     0x00000380, 0x000000f0, 0x000001a0, 0x00000012,
 ];
@@ -189,7 +189,7 @@ where
 // }
 
 #[inline(always)]
-fn roundx<const N: usize>(state: &mut [Simd<u32, N>], ridx: usize)
+fn roundx<const N: usize>(state: &mut [Simd<u32, N>], round_key: usize)
 where
     LaneCount<N>: SupportedLaneCount, {
     
@@ -223,37 +223,45 @@ where
     tmp[6] = e[1] ^ state[5];
     tmp[7] = e[2] ^ state[6];
 
+    let shl = Simd::<u32, N>::splat(11);
+    let shr = Simd::<u32, N>::splat(21);
+
     tmp[8] = e[0] ^ state[8];
-    tmp[8] = (tmp[8] << 11) | (tmp[8] >> 21);
+    tmp[8] = (tmp[8] <<  shl) | (tmp[8] >>  shr);
     tmp[9] = e[1] ^ state[9];
-    tmp[9] = (tmp[9] << 11) | (tmp[9] >> 21);
+    tmp[9] = (tmp[9] <<  shl) | (tmp[9] >>  shr);
     tmp[10] = e[2] ^ state[10];
-    tmp[10] = (tmp[10] << 11) | (tmp[10] >> 21);
+    tmp[10] = (tmp[10] << shl) | (tmp[10] >> shr);
     tmp[11] = e[3] ^ state[11];
-    tmp[11] = (tmp[11] << 11) | (tmp[11] >> 21);
+    tmp[11] = (tmp[11] << shl) | (tmp[11] >> shr);
 
     state[0] = (!tmp[4] & tmp[8]) ^ tmp[0];
     state[1] = (!tmp[5] & tmp[9]) ^ tmp[1];
     state[2] = (!tmp[6] & tmp[10]) ^ tmp[2];
     state[3] = (!tmp[7] & tmp[11]) ^ tmp[3];
 
-    state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]);
-    state[4] = (state[4] << 1) | (state[4] >> 31);
-    state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]);
-    state[5] = (state[5] << 1) | (state[5] >> 31);
-    state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]);
-    state[6] = (state[6] << 1) | (state[6] >> 31);
-    state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]);
-    state[7] = (state[7] << 1) | (state[7] >> 31);
+    let shl = Simd::<u32, N>::splat(1);
+    let shr = Simd::<u32, N>::splat(31);
 
+    state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]);
+    state[4] = (state[4] << shl) | (state[4] >> shr);
+    state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]);
+    state[5] = (state[5] << shl) | (state[5] >> shr);
+    state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]);
+    state[6] = (state[6] << shl) | (state[6] >> shr);
+    state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]);
+    state[7] = (state[7] << shl) | (state[7] >> shr);
+
+    let shl = Simd::<u32, N>::splat(8);
+    let shr = Simd::<u32, N>::splat(24);
     state[8] = ((!tmp[2] & tmp[6]) ^ tmp[10]);
-    state[8] = (state[8] << 8) | (state[8] >> 24);
+    state[8] = (state[8] << shl) | (state[8] >> shr);
     state[9] = ((!tmp[3] & tmp[7]) ^ tmp[11]);
-    state[9] = (state[9] << 8) | (state[9] >> 24);
+    state[9] = (state[9] << shl) | (state[9] >> shr);
     state[10] = ((!tmp[0] & tmp[4]) ^ tmp[8]);
-    state[10] = (state[10] << 8) | (state[10] >> 24);
+    state[10] = (state[10] << shl) | (state[10] >> shr);
     state[11] = ((!tmp[1] & tmp[5]) ^ tmp[9]);
-    state[11] = (state[11] << 8) | (state[11] >> 24);
+    state[11] = (state[11] << shl) | (state[11] >> shr);
 }
 
 /// Xoodoo\[n_r\] permutation function s.t. n_r ( <= MAX_ROUNDS ) times round function
