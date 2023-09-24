@@ -201,14 +201,15 @@ where
         state[3] ^ state[7] ^ state[11],
     ];
         
+    let t0 = cyclic_shiftx::<N, 1, 5>(&p);
+    let t1 = cyclic_shiftx::<N, 1, 14>(&p);
 
-    let e = [Simd::<u32, N>::splat(0u32); 4];
-    e = [
-        p[3].rotate_left(5) ^ p[3].rotate_left(14),
-        p[0].rotate_left(5) ^ p[0].rotate_left(14),
-        p[1].rotate_left(5) ^ p[1].rotate_left(14),
-        p[2].rotate_left(5) ^ p[2].rotate_left(14),
-    ];
+    let mut e = [Simd::<u32, N>::splat(0u32); 4];
+    unroll! {
+        for i in 0..4 {
+            e[i] = t0[i] ^ t1[i];
+        }
+    }
 
     let mut tmp = [Simd::<u32, N>::splat(0u32); 12];;
 
@@ -222,25 +223,37 @@ where
     tmp[6] = e[1] ^ state[5];
     tmp[7] = e[2] ^ state[6];
 
-    tmp[8] = (e[0] ^ state[8]).rotate_left(11);
-    tmp[9] = (e[1] ^ state[9]).rotate_left(11);
-    tmp[10] = (e[2] ^ state[10]).rotate_left(11);
-    tmp[11] = (e[3] ^ state[11]).rotate_left(11);
+    tmp[8] = e[0] ^ state[8];
+    tmp[8] = cyclic_shiftx::<N, 1, 11>(&tmp[8]);
+    tmp[9] = e[1] ^ state[9];
+    tmp[9] = cyclic_shiftx::<N, 1, 11>(&tmp[9]);
+    tmp[10] = e[2] ^ state[10];
+    tmp[10] = cyclic_shiftx::<N, 1, 11>(&tmp[10]);
+    tmp[11] = e[3] ^ state[11];
+    tmp[11] = cyclic_shiftx::<N, 1, 11>(&tmp[11]);
 
     state[0] = (!tmp[4] & tmp[8]) ^ tmp[0];
     state[1] = (!tmp[5] & tmp[9]) ^ tmp[1];
     state[2] = (!tmp[6] & tmp[10]) ^ tmp[2];
     state[3] = (!tmp[7] & tmp[11]) ^ tmp[3];
 
-    state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]).rotate_left(1);
-    state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]).rotate_left(1);
-    state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]).rotate_left(1);
-    state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]).rotate_left(1);
+    state[4] = ((!tmp[8] & tmp[0]) ^ tmp[4]);
+    state[4] = cyclic_shiftx::<N, 1, 1>(&state[4]);
+    state[5] = ((!tmp[9] & tmp[1]) ^ tmp[5]);
+    state[5] = cyclic_shiftx::<N, 1, 1>(&state[5]);
+    state[6] = ((!tmp[10] & tmp[2]) ^ tmp[6]);
+    state[6] = cyclic_shiftx::<N, 1, 1>(&state[6]);
+    state[7] = ((!tmp[11] & tmp[3]) ^ tmp[7]);
+    state[7] = cyclic_shiftx::<N, 1, 1>(&state[7]);
 
-    state[8] = ((!tmp[2] & tmp[6]) ^ tmp[10]).rotate_left(8);
-    state[9] = ((!tmp[3] & tmp[7]) ^ tmp[11]).rotate_left(8);
-    state[10] = ((!tmp[0] & tmp[4]) ^ tmp[8]).rotate_left(8);
-    state[11] = ((!tmp[1] & tmp[5]) ^ tmp[9]).rotate_left(8);
+    state[8] = ((!tmp[2] & tmp[6]) ^ tmp[10]);
+    state[8] = cyclic_shiftx::<N, 1, 8>(&state[8]);
+    state[9] = ((!tmp[3] & tmp[7]) ^ tmp[11]);
+    state[9] = cyclic_shiftx::<N, 1, 8>(&state[9]);
+    state[10] = ((!tmp[0] & tmp[4]) ^ tmp[8]);
+    state[10] = cyclic_shiftx::<N, 1, 8>(&state[10]);
+    state[11] = ((!tmp[1] & tmp[5]) ^ tmp[9]);
+    state[11] = cyclic_shiftx::<N, 1, 8>(&state[11]);
 }
 
 /// Xoodoo\[n_r\] permutation function s.t. n_r ( <= MAX_ROUNDS ) times round function
